@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mailcapture"
+version = "0.1.0"
+description = "Official Python SDK for the MailCapture email testing API"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+keywords = ["email", "testing", "integration-test", "otp", "2fa", "mailcapture"]
+authors = [{ name = "MailCapture" }]
+dependencies = [
+    "httpx>=0.27.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.2.0",
+    "pytest-asyncio>=0.23.0",
+    "respx>=0.21.0",
+]
+
+[project.urls]
+Homepage = "https://mailcapture.app"
+Repository = "https://github.com/mailcapture/mailcapture-python"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["mailcapture*"]
