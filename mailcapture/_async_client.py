@@ -8,9 +8,10 @@ from typing import Any
 import httpx
 
 from ._errors import MailCaptureNetworkError, MailCaptureTimeoutError
+from ._generate import generate_tag
 from ._http import parse_datetime_param, raise_api_error
 from ._inbox import AsyncInbox
-from ._types import Capture, CaptureList, LatestResult, PingResult
+from ._types import Capture, CaptureList, GenerateResult, LatestResult, PingResult
 
 _DEFAULT_BASE_URL = "https://mailcapture.app"
 _DEFAULT_REQUEST_TIMEOUT = 10.0
@@ -36,7 +37,7 @@ class AsyncMailCapture:
             await mc.aclose()
 
     Args:
-        api_key: Your MailCapture API key (``mc_live_...``).
+        api_key: Your MailCapture API key (``mc_...``).
         base_url: API base URL. Override for local development.
         request_timeout: Default timeout in seconds for non-polling requests.
     """
@@ -51,13 +52,13 @@ class AsyncMailCapture:
         if not api_key or not isinstance(api_key, str):
             raise ValueError(
                 "AsyncMailCapture: API key is required.\n"
-                '  AsyncMailCapture("mc_live_...")\n'
+                '  AsyncMailCapture("mc_...")\n'
                 "  or\n"
                 '  AsyncMailCapture(os.environ["MAILCAPTURE_API_KEY"])'
             )
-        if not api_key.startswith(("mc_live_", "mc_test_")):
+        if not api_key.startswith("mc_"):
             warnings.warn(
-                '[mailcapture] API key does not start with "mc_live_" or "mc_test_". '
+                '[mailcapture] API key does not start with "mc_". Are you sure you copied the full key? '
                 "Make sure you copied the full key from https://mailcapture.app/admin/api-keys",
                 stacklevel=2,
             )
@@ -110,7 +111,7 @@ class AsyncMailCapture:
         self,
         tag: str,
         *,
-        timeout: float = 30.0,
+        timeout: float = 60.0,
         poll_timeout: int = 10,
         after: datetime | str | None = None,
     ) -> Capture:
@@ -118,7 +119,7 @@ class AsyncMailCapture:
 
         Args:
             tag: The capture tag to wait on (e.g. "signup").
-            timeout: Total time to wait in seconds (default 30).
+            timeout: Total time to wait in seconds (default 60).
             poll_timeout: Per-poll server timeout in seconds (max 30, default 10).
             after: Only return captures received after this datetime.
 
@@ -226,6 +227,23 @@ class AsyncMailCapture:
                 "Call `await mc.ping()` first, then use `mc.address(tag)`."
             )
         return f"{self._username}-{tag}@mailcapture.app"
+
+    def generate(self) -> "GenerateResult":
+        """Generate a unique tag and its capture email address.
+
+        Synchronous — requires ``await ping()`` to have been called first.
+
+        Example::
+
+            await mc.ping()
+            result = mc.generate()
+            # result.tag:   "funky-otter-a3f2b8"
+            # result.email: "alice-funky-otter-a3f2b8@mailcapture.app"
+            await register_user(result.email)
+            email = await mc.wait_for(result.tag, timeout=15)
+        """
+        tag = generate_tag()
+        return GenerateResult(tag=tag, email=self.address(tag))
 
     # -------------------------------------------------------------------------
     # Internals

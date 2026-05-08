@@ -26,7 +26,7 @@ BASE = "https://mailcapture.app"
 async def test_async_ping_returns_result():
     respx.get(f"{BASE}/v1/ping").mock(return_value=httpx.Response(200, json=ping_dict()))
 
-    async with AsyncMailCapture("mc_live_test") as mc:
+    async with AsyncMailCapture("mc_testkey") as mc:
         result = await mc.ping()
 
     assert result.username == "alice"
@@ -36,7 +36,7 @@ async def test_async_ping_returns_result():
 async def test_async_ping_caches_username():
     respx.get(f"{BASE}/v1/ping").mock(return_value=httpx.Response(200, json=ping_dict("carol")))
 
-    async with AsyncMailCapture("mc_live_test") as mc:
+    async with AsyncMailCapture("mc_testkey") as mc:
         assert mc.username is None
         await mc.ping()
         assert mc.username == "carol"
@@ -47,7 +47,7 @@ async def test_async_ping_raises_auth_error():
     respx.get(f"{BASE}/v1/ping").mock(return_value=httpx.Response(401, json=auth_error_dict()))
 
     with pytest.raises(MailCaptureAuthError) as exc_info:
-        async with AsyncMailCapture("mc_live_test") as mc:
+        async with AsyncMailCapture("mc_testkey") as mc:
             await mc.ping()
 
     assert "Authentication failed" in str(exc_info.value)
@@ -68,7 +68,7 @@ async def test_async_wait_for_returns_capture():
         )
     )
 
-    async with AsyncMailCapture("mc_live_test") as mc:
+    async with AsyncMailCapture("mc_testkey") as mc:
         result = await mc.wait_for("signup", timeout=5)
 
     assert result.otp == "654321"
@@ -90,7 +90,7 @@ async def test_async_wait_for_loops_on_408():
 
     respx.get(f"{BASE}/v1/latest/signup").mock(side_effect=handler)
 
-    async with AsyncMailCapture("mc_live_test") as mc:
+    async with AsyncMailCapture("mc_testkey") as mc:
         result = await mc.wait_for("signup", timeout=30, poll_timeout=1)
 
     assert result.id == cap["id"]
@@ -103,7 +103,7 @@ async def test_async_wait_for_raises_timeout():
         return_value=httpx.Response(408, json=timeout_dict())
     )
 
-    async with AsyncMailCapture("mc_live_test") as mc:
+    async with AsyncMailCapture("mc_testkey") as mc:
         with pytest.raises(MailCaptureTimeoutError) as exc_info:
             await mc.wait_for("signup", timeout=0.5, poll_timeout=1)
 
@@ -123,7 +123,7 @@ async def test_async_list():
         return_value=httpx.Response(200, json={"items": [cap], "count": 1})
     )
 
-    async with AsyncMailCapture("mc_live_test") as mc:
+    async with AsyncMailCapture("mc_testkey") as mc:
         result = await mc.list(tag="signup")
 
     assert result.count == 1
@@ -141,7 +141,7 @@ async def test_async_get_raises_not_found():
         return_value=httpx.Response(404, json=not_found_dict())
     )
 
-    async with AsyncMailCapture("mc_live_test") as mc:
+    async with AsyncMailCapture("mc_testkey") as mc:
         with pytest.raises(MailCaptureNotFoundError):
             await mc.get("missing")
 
@@ -155,7 +155,7 @@ async def test_async_get_raises_not_found():
 async def test_async_delete_on_204():
     respx.delete(f"{BASE}/v1/captures/signup").mock(return_value=httpx.Response(204))
 
-    async with AsyncMailCapture("mc_live_test") as mc:
+    async with AsyncMailCapture("mc_testkey") as mc:
         await mc.delete("signup")  # should not raise
 
 
@@ -174,7 +174,7 @@ async def test_async_inbox_wait_for():
         )
     )
 
-    async with AsyncMailCapture("mc_live_test") as mc:
+    async with AsyncMailCapture("mc_testkey") as mc:
         inbox = mc.inbox("invite")
         result = await inbox.wait_for(timeout=5)
 
@@ -190,6 +190,6 @@ async def test_async_inbox_wait_for():
 async def test_async_network_error():
     respx.get(f"{BASE}/v1/ping").mock(side_effect=httpx.ConnectError("refused"))
 
-    async with AsyncMailCapture("mc_live_test") as mc:
+    async with AsyncMailCapture("mc_testkey") as mc:
         with pytest.raises(MailCaptureNetworkError):
             await mc.ping()

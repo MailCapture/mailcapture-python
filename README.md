@@ -83,7 +83,7 @@ Both clients accept the same constructor arguments.
 
 | Argument | Default | Description |
 |---|---|---|
-| `api_key` | required | Your `mc_live_...` API key |
+| `api_key` | required | Your `mc_...` API key |
 | `base_url` | `https://mailcapture.app` | Override for local dev |
 | `request_timeout` | `10.0` | Default timeout in seconds |
 

@@ -2,7 +2,7 @@
 Example: OTP / 2FA email integration test patterns.
 
 Requires:
-    MAILCAPTURE_API_KEY=mc_live_... python examples/integration_test.py
+    MAILCAPTURE_API_KEY=mc_... python examples/integration_test.py
 """
 import asyncio
 import os

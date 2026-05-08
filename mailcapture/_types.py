@@ -94,3 +94,14 @@ class LatestResult:
             count=d["count"],
             next_after=d["next_after"],
         )
+
+
+@dataclass
+class GenerateResult:
+    """Result from :meth:`MailCapture.generate`."""
+
+    tag: str
+    """The generated tag, e.g. ``"funky-otter-a3f2b8"``."""
+
+    email: str
+    """The full capture email address for this tag."""

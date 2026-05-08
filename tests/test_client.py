@@ -28,18 +28,13 @@ def test_raises_on_empty_key():
 
 
 def test_warns_on_bad_key_prefix():
-    with pytest.warns(UserWarning, match="mc_live_"):
+    with pytest.warns(UserWarning, match="mc_"):
         MailCapture("badkey")
 
 
-def test_no_warning_for_live_key():
-    # Should not raise or warn
-    mc = MailCapture("mc_live_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
-    mc.close()
-
-
-def test_no_warning_for_test_key():
-    mc = MailCapture("mc_test_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
+def test_no_warning_for_mc_key():
+    # Should not raise or warn for any mc_ key
+    mc = MailCapture("mc_e3d0fe6221f0435b90d0d0915d6fd14a")
     mc.close()
 
 
@@ -52,7 +47,7 @@ def test_no_warning_for_test_key():
 def test_ping_returns_result():
     respx.get(f"{BASE}/v1/ping").mock(return_value=httpx.Response(200, json=ping_dict()))
 
-    with MailCapture("mc_live_test") as mc:
+    with MailCapture("mc_testkey") as mc:
         result = mc.ping()
 
     assert result.username == "alice"
@@ -63,7 +58,7 @@ def test_ping_returns_result():
 def test_ping_caches_username():
     respx.get(f"{BASE}/v1/ping").mock(return_value=httpx.Response(200, json=ping_dict("bob")))
 
-    with MailCapture("mc_live_test") as mc:
+    with MailCapture("mc_testkey") as mc:
         assert mc.username is None
         mc.ping()
         assert mc.username == "bob"
@@ -74,12 +69,12 @@ def test_ping_raises_auth_error_on_401():
     respx.get(f"{BASE}/v1/ping").mock(return_value=httpx.Response(401, json=auth_error_dict()))
 
     with pytest.raises(MailCaptureAuthError) as exc_info:
-        with MailCapture("mc_live_test") as mc:
+        with MailCapture("mc_testkey") as mc:
             mc.ping()
 
     assert exc_info.value.code == "UNAUTHORIZED"
     assert "Authentication failed" in str(exc_info.value)
-    assert "mc_live_" in str(exc_info.value)
+    assert "mailcapture.app" in str(exc_info.value)
 
 
 # ---------------------------------------------------------------------------
@@ -88,7 +83,7 @@ def test_ping_raises_auth_error_on_401():
 
 
 def test_address_raises_before_ping():
-    with MailCapture("mc_live_test") as mc:
+    with MailCapture("mc_testkey") as mc:
         with pytest.raises(RuntimeError, match="ping()"):
             mc.address("signup")
 
@@ -97,7 +92,7 @@ def test_address_raises_before_ping():
 def test_address_returns_correct_email():
     respx.get(f"{BASE}/v1/ping").mock(return_value=httpx.Response(200, json=ping_dict("alice")))
 
-    with MailCapture("mc_live_test") as mc:
+    with MailCapture("mc_testkey") as mc:
         mc.ping()
         assert mc.address("signup") == "alice-signup@mailcapture.app"
         assert mc.address("password-reset") == "alice-password-reset@mailcapture.app"
@@ -118,7 +113,7 @@ def test_wait_for_returns_first_capture():
         )
     )
 
-    with MailCapture("mc_live_test") as mc:
+    with MailCapture("mc_testkey") as mc:
         result = mc.wait_for("signup", timeout=5)
 
     assert result.id == cap["id"]
@@ -141,7 +136,7 @@ def test_wait_for_loops_on_408():
 
     respx.get(f"{BASE}/v1/latest/signup").mock(side_effect=handler)
 
-    with MailCapture("mc_live_test") as mc:
+    with MailCapture("mc_testkey") as mc:
         result = mc.wait_for("signup", timeout=30, poll_timeout=1)
 
     assert result.id == cap["id"]
@@ -154,7 +149,7 @@ def test_wait_for_raises_timeout_error():
         return_value=httpx.Response(408, json=timeout_dict())
     )
 
-    with MailCapture("mc_live_test") as mc:
+    with MailCapture("mc_testkey") as mc:
         with pytest.raises(MailCaptureTimeoutError) as exc_info:
             mc.wait_for("signup", timeout=0.5, poll_timeout=1)
 
@@ -172,7 +167,7 @@ def test_wait_for_timeout_hint_includes_address_after_ping():
         return_value=httpx.Response(408, json=timeout_dict())
     )
 
-    with MailCapture("mc_live_test") as mc:
+    with MailCapture("mc_testkey") as mc:
         mc.ping()
         with pytest.raises(MailCaptureTimeoutError) as exc_info:
             mc.wait_for("signup", timeout=0.5, poll_timeout=1)
@@ -208,7 +203,7 @@ def test_wait_for_advances_cursor():
 
     respx.get(f"{BASE}/v1/latest/signup").mock(side_effect=handler)
 
-    with MailCapture("mc_live_test") as mc:
+    with MailCapture("mc_testkey") as mc:
         result = mc.wait_for("signup", timeout=5, poll_timeout=1)
 
     # Should return cap1 immediately (first item on first poll)
@@ -227,7 +222,7 @@ def test_list_returns_captures():
         return_value=httpx.Response(200, json={"items": [cap], "count": 1})
     )
 
-    with MailCapture("mc_live_test") as mc:
+    with MailCapture("mc_testkey") as mc:
         result = mc.list()
 
     assert result.count == 1
@@ -241,7 +236,7 @@ def test_list_sends_params():
         return_value=httpx.Response(200, json={"items": [], "count": 0})
     )
 
-    with MailCapture("mc_live_test") as mc:
+    with MailCapture("mc_testkey") as mc:
         mc.list(tag="signup", limit=10)
 
     request = respx.calls.last.request
@@ -255,7 +250,7 @@ def test_list_sends_params():
 
 
 def test_get_raises_on_empty_id():
-    with MailCapture("mc_live_test") as mc:
+    with MailCapture("mc_testkey") as mc:
         with pytest.raises(ValueError, match="capture_id is required"):
             mc.get("")
 
@@ -267,7 +262,7 @@ def test_get_returns_capture():
         return_value=httpx.Response(200, json=cap)
     )
 
-    with MailCapture("mc_live_test") as mc:
+    with MailCapture("mc_testkey") as mc:
         result = mc.get("xyz-456")
 
     assert result.id == "xyz-456"
@@ -279,7 +274,7 @@ def test_get_raises_not_found():
         return_value=httpx.Response(404, json=not_found_dict())
     )
 
-    with MailCapture("mc_live_test") as mc:
+    with MailCapture("mc_testkey") as mc:
         with pytest.raises(MailCaptureNotFoundError) as exc_info:
             mc.get("nonexistent")
 
@@ -292,7 +287,7 @@ def test_get_raises_not_found():
 
 
 def test_delete_raises_on_empty_tag():
-    with MailCapture("mc_live_test") as mc:
+    with MailCapture("mc_testkey") as mc:
         with pytest.raises(ValueError, match="tag is required"):
             mc.delete("")
 
@@ -303,7 +298,7 @@ def test_delete_succeeds_on_204():
         return_value=httpx.Response(204)
     )
 
-    with MailCapture("mc_live_test") as mc:
+    with MailCapture("mc_testkey") as mc:
         mc.delete("signup")  # should not raise
 
 
@@ -313,19 +308,19 @@ def test_delete_succeeds_on_204():
 
 
 def test_inbox_raises_on_empty_tag():
-    with MailCapture("mc_live_test") as mc:
+    with MailCapture("mc_testkey") as mc:
         with pytest.raises(ValueError, match="tag is required"):
             mc.inbox("")
 
 
 def test_inbox_tag():
-    with MailCapture("mc_live_test") as mc:
+    with MailCapture("mc_testkey") as mc:
         inbox = mc.inbox("signup")
     assert inbox.tag == "signup"
 
 
 def test_inbox_address_requires_ping():
-    with MailCapture("mc_live_test") as mc:
+    with MailCapture("mc_testkey") as mc:
         inbox = mc.inbox("signup")
     with pytest.raises(RuntimeError, match="ping()"):
         _ = inbox.address
@@ -340,7 +335,7 @@ def test_inbox_address_requires_ping():
 def test_network_error_on_connection_failure():
     respx.get(f"{BASE}/v1/ping").mock(side_effect=httpx.ConnectError("ECONNREFUSED"))
 
-    with MailCapture("mc_live_test") as mc:
+    with MailCapture("mc_testkey") as mc:
         with pytest.raises(MailCaptureNetworkError) as exc_info:
             mc.ping()
 
