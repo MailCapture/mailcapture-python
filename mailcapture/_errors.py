@@ -27,7 +27,7 @@ class MailCaptureAuthError(MailCaptureError):
             "Authentication failed.",
             f'Server said: "{detail}".' if detail else "Your API key was rejected.",
             "Make sure your key is valid and has not been revoked.",
-            "Keys look like: mc_live_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+            "Keys look like: mc_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
             "Find your keys at https://mailcapture.app/admin/api-keys",
         ]
         super().__init__(" ".join(parts), "UNAUTHORIZED")

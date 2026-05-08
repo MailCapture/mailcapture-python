@@ -23,6 +23,7 @@ Async::
 """
 from ._async_client import AsyncMailCapture
 from ._client import MailCapture
+from ._generate import generate_tag
 from ._errors import (
     MailCaptureApiError,
     MailCaptureAuthError,
@@ -32,7 +33,7 @@ from ._errors import (
     MailCaptureTimeoutError,
 )
 from ._inbox import AsyncInbox, Inbox
-from ._types import Capture, CaptureList, LatestResult, PingResult
+from ._types import Capture, CaptureList, GenerateResult, LatestResult, PingResult
 
 __all__ = [
     # Clients
@@ -41,9 +42,12 @@ __all__ = [
     # Inbox helpers
     "Inbox",
     "AsyncInbox",
+    # Tag generation
+    "generate_tag",
     # Types
     "Capture",
     "CaptureList",
+    "GenerateResult",
     "LatestResult",
     "PingResult",
     # Errors
