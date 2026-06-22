@@ -1,10 +1,10 @@
 [build-system]
-requires = ["setuptools>=68.0"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [project]
 name = "mailcapture"
-version = "0.1.0"
+version = "1.0.0"
 description = "Official Python SDK for the MailCapture email testing API"
 readme = "README.md"
 requires-python = ">=3.9"
@@ -29,6 +29,5 @@ Repository = "https://github.com/mailcapture/mailcapture-python"
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 
-[tool.setuptools.packages.find]
-where = ["."]
-include = ["mailcapture*"]
+[tool.hatch.build.targets.wheel]
+packages = ["mailcapture"]
