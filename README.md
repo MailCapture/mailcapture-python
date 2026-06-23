@@ -2,6 +2,10 @@
 
 Official Python SDK for [MailCapture](https://mailcapture.app) — a real email capture API for integration testing OTP codes, verification links, and other transactional emails.
 
+`mailcapture` is the Python client for the MailCapture service. Your application sends email to a unique MailCapture address during a test; this library retrieves that email so your test can assert on its contents — subject line, body text, OTP codes, links, and more. Both synchronous and async clients are included.
+
+A MailCapture account is required — free and paid plans are available. [Sign up at mailcapture.app](https://mailcapture.app).
+
 ## Installation
 
 ```bash
